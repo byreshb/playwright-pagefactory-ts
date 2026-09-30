@@ -1,0 +1,20 @@
+# Changelog
+
+All notable changes to this project are documented here. The format follows
+[Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses
+[Semantic Versioning](https://semver.org/).
+
+## [Unreleased]
+
+### Added
+- `@FindBy(spec)` decorator and shorthands `@Css`, `@XPath`, `@Id`, `@TestId`, `@Text`,
+  `@Label`, `@Placeholder`, `@AltText`, `@Title` and `@Role`, modeled on NestJS's decorator
+  conventions.
+- `@PageObject()` class marker.
+- `initPage(PageClass, page)`, the TypeScript counterpart of `PageFactory.initElements`.
+  It passes `page` to the constructor, so decorators and constructor-assigned locators can be
+  mixed in one class.
+- `By.*` locator builders and the `LocatorSpec` type.
+- TodoMVC examples (plain, decorator, constructor and mixed styles) with Playwright specs that
+  run against https://demo.playwright.dev/todomvc.
+- Documentation under `docs/`.
