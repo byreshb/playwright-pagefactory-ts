@@ -5,6 +5,8 @@ import { LocatorSpec, Role as AriaRole, RoleOptions, validateSpec } from '../loc
 export interface FindByEntry {
   propertyKey: string | symbol;
   locatorSpec: LocatorSpec;
+  /** The class whose field carries the decorator; lets a subclass override but not duplicate. */
+  declaredOn: Function;
 }
 
 /**
@@ -19,7 +21,16 @@ export function FindBy(locatorSpec: LocatorSpec): PropertyDecorator {
   return (target, propertyKey) => {
     const ctor = target.constructor;
     const entries: FindByEntry[] = Reflect.getMetadata(FIND_BY_METADATA, ctor) || [];
-    Reflect.defineMetadata(FIND_BY_METADATA, [...entries, { propertyKey, locatorSpec }], ctor);
+    if (entries.some((e) => e.propertyKey === propertyKey && e.declaredOn === ctor)) {
+      throw new Error(
+        `${ctor.name}.${String(propertyKey)} has more than one locator decorator; use exactly one`,
+      );
+    }
+    Reflect.defineMetadata(
+      FIND_BY_METADATA,
+      [...entries, { propertyKey, locatorSpec, declaredOn: ctor }],
+      ctor,
+    );
   };
 }
 
