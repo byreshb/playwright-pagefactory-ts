@@ -62,7 +62,7 @@ export function resolveLocator(page: Page, spec: LocatorSpec): Locator {
   const s = spec as Record<string, any>;
   if (s.css !== undefined) return page.locator(s.css);
   if (s.xpath !== undefined) return page.locator(`xpath=${s.xpath}`);
-  if (s.id !== undefined) return page.locator(`[id="${String(s.id).replace(/"/g, '\\"')}"]`);
+  if (s.id !== undefined) return page.locator(`[id="${String(s.id).replace(/["\\]/g, '\\$&')}"]`);
   if (s.testId !== undefined) return page.getByTestId(s.testId);
   if (s.text !== undefined) return page.getByText(s.text, { exact: s.exact });
   if (s.label !== undefined) return page.getByLabel(s.label, { exact: s.exact });

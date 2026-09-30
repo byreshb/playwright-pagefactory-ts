@@ -53,9 +53,7 @@ export const AltText = createFindByDecorator((altText: string, exact?: boolean) 
   exact,
 }));
 export const Title = createFindByDecorator((title: string, exact?: boolean) => ({ title, exact }));
+type Role = Extract<LocatorSpec, { role: unknown }>['role'];
 export const Role = createFindByDecorator(
-  (role: Extract<LocatorSpec, { role: unknown }>['role'], options: { name?: string | RegExp; exact?: boolean } = {}) => ({
-    role,
-    ...options,
-  }),
+  (role: Role, options: { name?: string | RegExp; exact?: boolean } = {}) => ({ role, ...options }),
 );
