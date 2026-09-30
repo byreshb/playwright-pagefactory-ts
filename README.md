@@ -16,7 +16,7 @@ See [`docs/`](docs/README.md) for a learning path and a file-by-file guide to th
 ## Install (from GitHub)
 
 ```bash
-npm install github:byreshb/playwright-pagefactory-ts @playwright/test
+npm install github:byreshb/playwright-pagefactory-ts#v0.1.0 @playwright/test
 ```
 
 The package builds itself on install (`prepare` script). Your `tsconfig.json` needs
