@@ -6,8 +6,29 @@ Conceptually the TypeScript sibling of [`playwright-pagefactory`](../playwright-
 (the Java/Selenium-style `@FindBy` port for Playwright Java) — same idea, native to the
 TypeScript ecosystem's own idiom: decorators, the way NestJS, Angular, and TypeORM do it.
 
-**Status: design/spec only.** Nothing in this repo runs yet. This README is the brief for
-whoever (human or agent) implements it next.
+**Status: build-order steps 1–7 implemented.** `npm test` compiles the library and example with
+`tsc` into `dist-e2e/` and runs real `playwright test` specs against the live TodoMVC demo
+(Playwright's runner can't compile legacy decorators itself, hence the `tsc` step). Not yet
+published (step 8).
+
+See [`docs/`](docs/README.md) for a learning path and a file-by-file guide to the code.
+
+## Install (from GitHub)
+
+```bash
+npm install github:byreshb/playwright-pagefactory-ts @playwright/test
+```
+
+The package builds itself on install (`prepare` script). Your `tsconfig.json` needs
+`"experimentalDecorators": true`. Then:
+
+```ts
+import { PageObject, Role, initPage } from 'playwright-pagefactory-ts';
+```
+
+Note: `playwright test` can't compile legacy decorators in your own page-object files, so
+compile them with `tsc` first — see [`docs/dependencies.md`](docs/dependencies.md) for the
+setup this repo's own tests use.
 
 ## Naming
 
@@ -205,6 +226,48 @@ into a Playwright `Locator`" question — it's a direct port of what `PageFactor
 `DefaultFieldDecorator.java` / `FindBy.java` already do, translated from Java's
 `java.lang.reflect` to TypeScript's `reflect-metadata`.
 
+## How this follows NestJS's decorator conventions
+
+The decorator design here is deliberately modeled on NestJS (`@nestjs/common`, checked against
+v12.1.1's source), not invented from scratch. Nest itself uses the legacy decorators +
+`reflect-metadata` combination (`experimentalDecorators`). Mapping:
+
+| NestJS                                                       | This library                                              |
+|--------------------------------------------------------------|-----------------------------------------------------------|
+| `@Injectable()` sets a watermark via `Reflect.defineMetadata` | `@PageObject()` sets `__pageObject__` the same way        |
+| Property-level `@Inject()` appends `{ key, type }` to an array on `target.constructor`, read with `Reflect.getMetadata` | `@FindBy()` appends `{ propertyKey, locatorSpec }` to an array on `target.constructor`, read the same way |
+| `@Get()` / `@Post()` are shorthands built by `createMappingDecorator` over `@RequestMapping()` | `@Css()`, `@TestId()`, `@Role()`, ... are shorthands built by `createFindByDecorator` over `@FindBy()` |
+| Namespaced string metadata keys in `constants.ts`            | Same, in `src/constants.ts`                               |
+
+Where it deliberately differs: Nest also does constructor-parameter injection using
+`design:paramtypes`; `@FindBy` only needs property-level metadata, so it doesn't. The
+`initPage` step (reading the metadata back and building the instance) plays the role of Nest's
+DI container, but is a direct port of the Java sibling's `PageFactory.initElements`.
+
+## Walkthrough: plain Playwright test vs. page object (TodoMVC)
+
+Two specs run the identical scenario against https://demo.playwright.dev/todomvc so you can
+compare them side by side:
+
+| File | What it shows |
+|------|---------------|
+| `test/playwright/todomvc.plain.spec.ts` | Ordinary Playwright: every `page.getByRole(...)` is written inside the test. |
+| `examples/todomvc-page.ts` | **The page object.** The decorators (`@Placeholder`, `@Role`, `@TestId`, `@Css`) sit right above each field and say how to find it. |
+| `test/playwright/todomvc.pageobject.spec.ts` | Same test, using `initPage(TodoMvcPage, page)` and `todoPage.addTodo(...)`, `todoPage.activeFilter.click()`, etc. |
+
+How a decorated field becomes a real locator:
+
+1. **Decorating** (when the class is loaded): `@Role('link', { name: 'Active' })` runs once and
+   records `{ propertyKey: 'activeFilter', locatorSpec: { role: 'link', name: 'Active' } }` in
+   metadata on the class. Code: `src/decorators/FindBy.ts`.
+2. **Initializing** (in the test): `initPage(TodoMvcPage, page)` creates the object, reads that
+   metadata back, calls `page.getByRole('link', { name: 'Active' })`, and assigns the result to
+   `todoPage.activeFilter`. Code: `src/initPage.ts`, with the spec-to-locator mapping in
+   `src/locators/By.ts`.
+3. **Using**: `todoPage.activeFilter` is an ordinary Playwright `Locator`.
+
+Run them with `npm test`.
+
 ## Why this saves time
 
 Compared to hand-writing `page.locator(...)` calls in every page object's constructor:
@@ -256,11 +319,11 @@ field.
 
 - **Package manager**: npm (matches most Playwright starter repos; swap for pnpm if
   preferred, no strong reason either way).
-- **TypeScript config**: `"experimentalDecorators": true`, `"emitDecoratorMetadata": true`,
-  target ES2020+.
+- **TypeScript config**: `"experimentalDecorators": true`, target ES2020+. (Nest also sets
+  `"emitDecoratorMetadata": true` for constructor injection; this library doesn't need it, so
+  it's left off.)
 - **Metadata**: `reflect-metadata`, imported once at the library's entry point.
-- **Test runner**: `@playwright/test` for anything exercising a real page; `vitest` (or
-  plain `node --test`) for pure decorator/metadata unit tests that don't need a browser.
+- **Test runner**: `@playwright/test` only (see `docs/dependencies.md`).
 - **Lint/format**: ESLint + Prettier, matching whatever defaults the other sibling
   Node/TS repos in `../` already use, for consistency.
 

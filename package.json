@@ -1,0 +1,32 @@
+{
+  "name": "playwright-pagefactory-ts",
+  "version": "0.1.0",
+  "description": "Decorator-based Page Object / Page Factory for Playwright, in TypeScript",
+  "license": "MIT",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "test": "tsc -p tsconfig.e2e.json && playwright test",
+    "prepare": "tsc -p tsconfig.build.json"
+  },
+  "peerDependencies": {
+    "@playwright/test": ">=1.40.0"
+  },
+  "dependencies": {
+    "reflect-metadata": "^0.2.2"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.49.1",
+    "typescript": "^5.6.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/byreshb/playwright-pagefactory-ts.git"
+  }
+}
