@@ -3,6 +3,38 @@
 Two channels exist: GitHub Releases, which is set up and used today, and npm, which is planned
 but **not set up**.
 
+## Versioning
+
+Versions follow [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`, for example
+`1.4.2`. Increase the part that matches the kind of change, and reset the parts to its right to 0.
+
+| Part | Bump it when | Example for this library | Users must change code? |
+|------|--------------|--------------------------|-------------------------|
+| **MAJOR** (`1.x.x` to `2.0.0`) | A breaking change to the public API | Renaming `initPage`; removing a decorator; changing what `@FindBy` accepts | Yes |
+| **MINOR** (`1.2.x` to `1.3.0`) | A backwards-compatible new feature | Adding a new shorthand such as `@Name`; a new option on an existing decorator | No |
+| **PATCH** (`1.2.3` to `1.2.4`) | A backwards-compatible bug fix | Fixing how a `{ role, name }` locator resolves; docs-only or internal fixes | No |
+
+Rules of thumb:
+
+- The public API is whatever `src/index.ts` exports, plus the decorator behaviour described in
+  `docs/`. Internals under `src/` that are not exported can change in any release.
+- Every user-visible change goes into `CHANGELOG.md` under `## [Unreleased]` when it is made, in
+  the same commit. Use the headings Added, Changed, Deprecated, Removed, Fixed, Security.
+- **Before 1.0** (`0.MINOR.PATCH`, where we are now), the API may still change; breaking changes
+  bump MINOR instead of MAJOR. Move to `1.0.0` once the API is settled and you want to promise
+  stability.
+- Deprecate before removing: mark something deprecated in a MINOR release and remove it in the
+  next MAJOR.
+- A tag is `v` plus the version (`v0.1.0`), and it must equal `package.json`'s `version`; the
+  release workflow refuses to run otherwise.
+- Never change or reuse a released version. Ship a new PATCH instead.
+
+Release history:
+
+| Version | Date | Notes |
+|---------|------|-------|
+| 0.1.0 | 2026-09-29 | First cut |
+
 ## GitHub Release (in use)
 
 A release is a git tag of the form `vX.Y.Z`. Pushing the tag triggers
