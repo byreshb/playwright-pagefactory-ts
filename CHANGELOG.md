@@ -6,6 +6,10 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-09-29
+
+First cut: a working starting point. The API may still change before 1.0.
+
 ### Added
 - `@FindBy(spec)` decorator and shorthands `@Css`, `@XPath`, `@Id`, `@TestId`, `@Text`,
   `@Label`, `@Placeholder`, `@AltText`, `@Title` and `@Role`, modeled on NestJS's decorator
@@ -18,3 +22,6 @@ All notable changes to this project are documented here. The format follows
 - TodoMVC examples (plain, decorator, constructor and mixed styles) with Playwright specs that
   run against https://demo.playwright.dev/todomvc.
 - Documentation under `docs/`.
+
+[Unreleased]: https://github.com/byreshb/playwright-pagefactory-ts/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/byreshb/playwright-pagefactory-ts/releases/tag/v0.1.0
