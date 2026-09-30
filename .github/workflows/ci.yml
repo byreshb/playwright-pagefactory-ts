@@ -43,6 +43,9 @@ jobs:
       - name: Test
         run: npm test
 
+      - name: Test with ES2022 class fields
+        run: npm run test:es2022
+
       - name: Upload Playwright report
         if: failure()
         uses: actions/upload-artifact@v4

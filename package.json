@@ -13,7 +13,8 @@
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit",
     "test": "tsc -p tsconfig.e2e.json && playwright test",
-    "prepare": "tsc -p tsconfig.build.json"
+    "prepare": "tsc -p tsconfig.build.json",
+    "test:es2022": "tsc -p tsconfig.e2e.json --target ES2022 && playwright test"
   },
   "peerDependencies": {
     "@playwright/test": ">=1.40.0"
