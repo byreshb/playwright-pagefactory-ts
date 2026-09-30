@@ -153,6 +153,80 @@ The point of `@FindBy` isn't speed — it's:
 If a benchmark ever matters, it should ship as an actual `bench/` script with numbers —
 not as a claim in this README.
 
+## How the Java sibling actually does this
+
+Worth being precise here rather than hand-wavy, since this library should mirror it:
+
+In `../playwright-pagefactory` (Java), a page object looks like:
+
+```java
+public class LoginPage {
+  @FindBy(id = "username") Locator username;
+  @FindBy(css = "input[type=password]") Locator password;
+  @FindBy(role = "button", roleName = "Sign in") Locator signIn;
+
+  public LoginPage(Page page) {
+    PageFactory.initElements(page, this);
+  }
+}
+```
+
+`@FindBy` is a Java annotation (`FindBy.java`) with one attribute per locator strategy
+(`id`, `css`, `xpath`, `role`, `testId`, `text`, ... — Selenium's strategies plus
+Playwright's `getBy*` ones), retained at runtime (`@Retention(RUNTIME)`) so it can be read
+back later.
+
+`PageFactory.initElements(page, this)` then, via plain Java reflection:
+
+1. walks every declared field of the class and its superclasses (`PageFactory.java`,
+   `proxyFields`),
+2. skips `static`/`final` fields (a final field means the constructor already assigned it
+   — usually a component's root locator — and must not be overwritten),
+3. for each remaining field, asks a `FieldDecorator` (`DefaultFieldDecorator.java`)
+   whether the field carries a locating annotation (`FindBy`/`FindBys`/`FindAll`),
+4. if so, converts that annotation into a `By` locator spec (`AbstractFindByBuilder`) and
+   resolves a real Playwright `Locator` from it,
+5. and assigns it onto the field with `field.setAccessible(true); field.set(...)`.
+
+The TypeScript version does the *exact same five steps*, just with TypeScript's
+equivalents standing in for Java's reflection API:
+
+| Java                                   | TypeScript                                            |
+|-----------------------------------------|--------------------------------------------------------|
+| `@FindBy(css = "...")` annotation        | `@FindBy({ css: '...' })` decorator                    |
+| Annotation retained at runtime (`RUNTIME`) | `Reflect.defineMetadata(...)` inside the decorator   |
+| `PageFactory.initElements(page, obj)`    | `initPage(PageClass, page)`                            |
+| `Field[] declaredFields` + reflection    | `Reflect.getMetadata(...)` reading back what `@FindBy` stored |
+| `AbstractFindByBuilder` → `By`           | The `By` builders in `src/locators/By.ts`               |
+| `field.set(pageObject, locator)`         | plain property assignment on the new instance           |
+
+So there's no invention needed on the "how do I read metadata off a field and turn it
+into a Playwright `Locator`" question — it's a direct port of what `PageFactory.java` /
+`DefaultFieldDecorator.java` / `FindBy.java` already do, translated from Java's
+`java.lang.reflect` to TypeScript's `reflect-metadata`.
+
+## Why this saves time
+
+Compared to hand-writing `page.locator(...)` calls in every page object's constructor:
+
+- **Less to write, less to get wrong.** One line per field (`@FindBy({...})` + the
+  declaration) instead of a declaration *and* a matching constructor assignment that has
+  to be kept in sync by hand as fields are added/renamed/reordered.
+- **Locator and field live in one place.** Reviewing a diff that adds a field shows the
+  selector right next to it, instead of sending the reviewer to scroll down to the
+  constructor to see what it's bound to.
+- **Same shape as the Java sibling.** A team (or a single person) moving between the Java
+  Playwright suite and a TypeScript one doesn't re-learn a pattern — `@FindBy(css = "...")`
+  and `@FindBy({ css: '...' })` are the same idea in each language's own idiom.
+- **Same shape as tools the TS ecosystem already knows.** Anyone who's used NestJS
+  controllers, Angular components, or TypeORM entities already has the muscle memory for
+  "decorator declares intent, framework wires it up at init time" — there's near-zero
+  ramp-up cost to reading a `@FindBy`-based page object for the first time.
+
+To be clear, none of this is about *runtime* speed (see the note above — decorators don't
+make anything execute faster). The time saved is authoring and review time, not test
+execution time.
+
 ## Proposed shape of the library
 
 ```
