@@ -8,10 +8,19 @@ All notable changes to this project are documented here. The format follows
 
 ### Fixed
 - `@Id` now escapes backslashes as well as quotes in the id value.
+- `@Role` and `By.role` passed only `name` and `exact`; they now pass every `getByRole` option
+  (`level`, `checked`, `disabled`, `expanded`, `pressed`, `selected`, `includeHidden`).
 
 ### Added
+- `@Text`, `@Label`, `@Placeholder`, `@AltText`, `@Title` and `@TestId` accept a `RegExp` as
+  well as a string.
+- Two locator decorators on the same field now throw when the class loads instead of one
+  silently winning.
+- Browser specs covering every decorator with quotes, backslashes, regular expressions and every
+  `getByRole` option, plus inheritance and invalid usage.
 - Specs showing decorated fields are lazy: no browser call at `initPage`, elements looked up on
   every action.
+- CI also runs every spec compiled for ES2022.
 
 ### Changed
 - README rewritten as a user guide; design rationale moved to `docs/design.md`, and the code map
