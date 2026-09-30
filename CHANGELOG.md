@@ -6,6 +6,17 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Fixed
+- `@Id` now escapes backslashes as well as quotes in the id value.
+
+### Added
+- Specs showing decorated fields are lazy: no browser call at `initPage`, elements looked up on
+  every action.
+
+### Changed
+- README rewritten as a user guide; design rationale moved to `docs/design.md`, and the code map
+  folded into `docs/syllabus.md`.
+
 ## [0.1.0] - 2026-09-29
 
 First cut: a working starting point. The API may still change before 1.0.
