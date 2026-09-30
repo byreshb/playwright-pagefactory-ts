@@ -66,7 +66,7 @@ return instance;
 ```
 
 1. **Construct.** `new PageClass(page)`. If the class has a constructor, it runs now (see
-   `constructor-vs-decorators.md`). If not, `page` is ignored.
+   [`constructor-vs-decorators.md`](constructor-vs-decorators.md)). If not, `page` is ignored.
 2. **Read the notes.** `getFindByEntries` returns the recorded list. Because
    `Reflect.getMetadata` walks the prototype chain, a subclass also sees its parent's entries.
    If a field is redeclared, the list is de-duplicated by field name and the **last** entry wins,
@@ -88,12 +88,43 @@ return instance;
 | `{ role, name?, exact? }` | `page.getByRole(role, { name, exact })` |
 
 The result is stored on the instance. From here on, `todoPage.activeFilter` is an ordinary
-Playwright `Locator`, and Playwright's own laziness applies: the element isn't searched for
-until you act on or assert against it.
+Playwright `Locator`.
 
 Each `initPage` call creates fresh locators bound to that test's `page`, so page objects are
 never shared between tests. The stored notes belong to the *class*, not the instance, and are
 only data (no `page` inside them), which is why one class can be initialized for many pages.
+
+## Lazy by design
+
+A decorated field is exactly as lazy as a locator you create by hand in a constructor, because it
+*is* one: `initPage` calls the same `page.getByRole(...)` / `page.locator(...)` you would.
+
+- **Creating a `Locator` makes no browser call.** `page.getByRole(...)` only builds a description
+  of how to find the element. `initPage` is synchronous and never talks to the browser.
+- **The DOM is queried when you act.** `fill`, `click`, `check`, `expect(...).toHaveText(...)`
+  and so on look the element up at that moment, with Playwright's auto-waiting.
+- **It is queried again on every action.** Nothing is cached, so a field keeps working after the
+  page navigates or re-renders and the old DOM node is gone.
+
+What that means in practice:
+
+```ts
+const todoPage = initPage(TodoMvcPage, page);  // no browser call; page can still be about:blank
+await page.goto('https://demo.playwright.dev/todomvc/#/');
+await todoPage.newTodoInput.fill('buy milk');  // the element is found here
+```
+
+`test/playwright/lazy.spec.ts` checks all three points in a real browser:
+
+| Test | What it proves |
+|------|----------------|
+| creating the page object makes no browser call | `initPage` (and a constructor-style page) succeed on a **closed** page; only the first `fill` fails |
+| page object can be created before the elements exist | fields created on an empty page work once the elements appear |
+| each use re-queries the DOM | after the element is replaced by a new node, the same field finds the new one |
+
+This is also why the library needs no proxies. Selenium's Java `PageFactory` wraps fields in
+proxies to get this behaviour, and adds `@CacheLookup` to opt out; Playwright locators are lazy
+already, so there is nothing to wrap.
 
 ## Design decisions and why
 - **Notes on the class, resolution at init.** Decorators run at class-definition time, when there
@@ -109,7 +140,7 @@ only data (no `page` inside them), which is why one class can be initialized for
 - **`initPage`, not `new`.** A decorator can't run code on `new`; something has to do phase 2.
   (Java has the same rule: you must call `PageFactory.initElements(page, this)`.)
 
-## Limits (by design, for v1)
+## Limits (by design, for now)
 - Locators are fixed per field; dynamic ones belong in methods/getters or the constructor.
 - Only Playwright's `Page` is supported, not `Frame` or nested components.
 - Uses the legacy (`experimentalDecorators`) decorator generation only.

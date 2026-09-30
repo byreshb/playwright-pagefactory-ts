@@ -2,7 +2,9 @@
 
 The decorators are **one way** to write a page object, not the only way. They are optional
 sugar over ordinary Playwright. You can use plain constructors, decorators, or mix them in one
-class. All three produce the same thing: fields holding real Playwright `Locator`s.
+class. All three produce the same thing: fields holding real Playwright `Locator`s, which are
+lazy in every style (no browser call until an action; see
+[`how-the-factory-works.md`](how-the-factory-works.md#lazy-by-design)).
 
 ## 1. Constructor style (no library at all)
 `examples/todomvc-constructor-page.ts`
