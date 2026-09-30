@@ -16,9 +16,8 @@
 | `@playwright/test` (`^1.49.1`) | Installed here so we can run the real tests: the test runner (`playwright test`), the `test`/`expect` API, and headless Chromium. |
 | `typescript` | Compiles `src/` to JavaScript, type-checks, and — importantly — compiles the decorator syntax. |
 
-Nothing else. In particular, there is **no** separate unit-test framework: tests are real Playwright
-specs against the live TodoMVC demo. (An earlier version used `vitest` with a fake `Page`; it was
-removed as confusing and unnecessary.) `@types/node` was also removed because nothing needed it.
+Nothing else. There is no separate unit-test framework: every test is a real Playwright spec in a
+real browser.
 
 ## Why `npm test` is "tsc, then playwright test"
 Playwright's runner compiles TypeScript itself, but with the *newer* decorator standard, so it
@@ -38,7 +37,10 @@ can't compile our `experimentalDecorators` code (`@Role(...)` on a field). `tsc`
 | `declaration: true` | Emits `.d.ts` files so users of the built library get types. |
 
 ## Config files
-- `tsconfig.json` — base settings and editor/type-check (`npm run typecheck`).
+- `tsconfig.json` — base settings, used by the editor and `npm run typecheck`.
 - `tsconfig.build.json` — builds the publishable library into `dist/` (`npm run build`).
 - `tsconfig.e2e.json` — builds `src` + `examples` into `dist-e2e/` for the tests.
 - `playwright.config.ts` — tells Playwright to run `test/playwright/*.spec.ts`.
+- `.github/workflows/ci.yml` — type-check, build and test on every push and pull request.
+- `.github/workflows/release.yml` — publishes a GitHub Release when a `vX.Y.Z` tag is pushed
+  (see [`releasing.md`](releasing.md)).

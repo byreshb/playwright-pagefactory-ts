@@ -24,22 +24,14 @@
 | `By.*`, `LocatorSpec`, `resolveLocator` | `src/locators/By.ts` | Describe a locator declaratively and turn it into a real Playwright `Locator`. |
 | `initPage(Class, page)` | `src/initPage.ts` | Build a page object and fill its decorated fields. |
 | `TodoMvcPage`, `TodoMvcConstructorPage`, `TodoMvcMixedPage` | `examples/` | The same page object written with decorators, with a plain constructor, and with both. |
-| Three TodoMVC spec files | `test/playwright/` | Same scenario with and without the page object. |
+| Playwright specs | `test/playwright/` | The same TodoMVC scenario in every style, plus the laziness checks. |
 
 Important: **this library never replaces Playwright.** It only decides *which Playwright call to
 make for each field*. Every value a user ends up with is a genuine Playwright `Locator`.
 
 ## Borrowed ideas (design, not code)
 - **NestJS**: the decorator conventions (metadata stored on `target.constructor`, shorthands built
-  from a factory, namespaced metadata keys). Checked against `@nestjs/common`
-  v12.1.1. No Nest code is copied or depended on.
+  from a factory, namespaced metadata keys). Checked against `@nestjs/common` v12.1.1. No Nest
+  code is copied or depended on. Full mapping in [`design.md`](design.md).
 - **The Java sibling** (`../playwright-pagefactory`): the overall `@FindBy` + `initElements` idea,
   ported as `@FindBy` + `initPage`.
-
-## Why `npm test` compiles first
-`npm test` runs `tsc -p tsconfig.e2e.json` (our build step, compiling `src/` and `examples/` to
-`dist-e2e/`) and then `playwright test` (Playwright's runner). We need the first step because
-Playwright's test runner compiles TypeScript itself using the *newer* decorator standard, while
-NestJS-style decorators use the *older* `experimentalDecorators` form. TypeScript's own compiler
-handles the older form, so we let it do that part, and let Playwright run the resulting plain
-JavaScript. Nothing is faked; the tests hit the real demo site in a real browser.
