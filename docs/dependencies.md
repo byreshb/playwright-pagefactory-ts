@@ -23,7 +23,7 @@ real browser.
 Playwright's runner compiles TypeScript itself, but with the *newer* decorator standard, so it
 can't compile our `experimentalDecorators` code (`@Role(...)` on a field). `tsc` can. So:
 
-1. `tsc -p tsconfig.e2e.json` compiles `src/` + `examples/` → plain JS in `dist-e2e/`.
+1. `tsc -p tsconfig.e2e.json` compiles `src/`, `examples/` and `test/pages/` → plain JS in `dist-e2e/`.
 2. `playwright test` runs the specs in `test/playwright/`, which import from `dist-e2e/`.
 
 ## tsconfig choices
@@ -31,7 +31,7 @@ can't compile our `experimentalDecorators` code (`@Role(...)` on a field). `tsc`
 |---------|-----|
 | `experimentalDecorators: true` | Turns on the older decorator syntax NestJS/Angular/TypeORM use. Required. |
 | `emitDecoratorMetadata` | **Not set.** Nest uses it to read constructor parameter types for injection. We never read types, so it would be unused. |
-| `target: ES2020` | Keeps class fields simple: a declared field like `todoCount!: Locator;` emits nothing, so it can't overwrite what `initPage` assigns. |
+| `target: ES2020` | Any target works for users. Under ES2022+ TypeScript emits each field (`todoCount;`), but `initPage` assigns after the constructor, so nothing is overwritten. CI runs every spec with both targets (`npm test` and `npm run test:es2022`). |
 | `strict: true` | Normal safety. The `!` on fields says "assigned later by `initPage`". |
 | `lib: [ES2020, DOM]` | Playwright's types refer to DOM types. |
 | `declaration: true` | Emits `.d.ts` files so users of the built library get types. |
@@ -39,8 +39,8 @@ can't compile our `experimentalDecorators` code (`@Role(...)` on a field). `tsc`
 ## Config files
 - `tsconfig.json` — base settings, used by the editor and `npm run typecheck`.
 - `tsconfig.build.json` — builds the publishable library into `dist/` (`npm run build`).
-- `tsconfig.e2e.json` — builds `src` + `examples` into `dist-e2e/` for the tests.
+- `tsconfig.e2e.json` — builds `src`, `examples` and `test/pages` into `dist-e2e/` for the tests.
 - `playwright.config.ts` — tells Playwright to run `test/playwright/*.spec.ts`.
-- `.github/workflows/ci.yml` — type-check, build and test on every push and pull request.
+- `.github/workflows/ci.yml` — type-check, build and test (default and ES2022 targets) on every push and pull request.
 - `.github/workflows/release.yml` — publishes a GitHub Release when a `vX.Y.Z` tag is pushed
   (see [`releasing.md`](releasing.md)).

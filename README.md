@@ -58,17 +58,26 @@ Both produce the same `Locator`s; the decorator just keeps the locator next to i
 | `@Css('#id .cls')` | `page.locator(css)` |
 | `@XPath('//button')` | `page.locator('xpath=...')` |
 | `@Id('username')` | `page.locator('[id="username"]')` |
-| `@TestId('status')` | `page.getByTestId(...)` |
-| `@Role('button', { name, exact })` | `page.getByRole(...)` |
-| `@Text(text, exact?)` | `page.getByText(...)` |
-| `@Label(text, exact?)` | `page.getByLabel(...)` |
-| `@Placeholder(text, exact?)` | `page.getByPlaceholder(...)` |
-| `@AltText(text, exact?)` | `page.getByAltText(...)` |
-| `@Title(text, exact?)` | `page.getByTitle(...)` |
+| `@TestId('status')` or `@TestId(/^row-/)` | `page.getByTestId(...)` |
+| `@Role('heading', { name, exact, level, checked, ... })` | `page.getByRole(...)`, with every option it accepts |
+| `@Text(textOrRegExp, exact?)` | `page.getByText(...)` |
+| `@Label(textOrRegExp, exact?)` | `page.getByLabel(...)` |
+| `@Placeholder(textOrRegExp, exact?)` | `page.getByPlaceholder(...)` |
+| `@AltText(textOrRegExp, exact?)` | `page.getByAltText(...)` |
+| `@Title(textOrRegExp, exact?)` | `page.getByTitle(...)` |
 | `@FindBy({ css: '...' })` | the general form; every shorthand above is `@FindBy` with one key |
 
-`@PageObject()` marks the class. A spec with zero or two strategies throws as soon as the class
-loads, not in the middle of a test.
+`@PageObject()` marks the class. Every decorator is checked in a real browser by
+`test/playwright/decorators.spec.ts`, including quotes, backslashes and regular expressions.
+
+Rules:
+
+- **One locator decorator per field.** Two on the same field, or a spec with zero or two
+  strategies, throws as soon as the class loads, not in the middle of a test.
+- **Decorated fields aren't set yet inside the constructor.** `initPage` fills them after the
+  constructor returns, so use them from methods.
+- **To override an inherited field, redeclare it with `declare`:**
+  `@Css('.new') declare submit: Locator;`. That compiles under every `target`, including ES2022+.
 
 ## Lazy, like hand-written locators
 

@@ -24,7 +24,7 @@
 | `By.*`, `LocatorSpec`, `resolveLocator` | `src/locators/By.ts` | Describe a locator declaratively and turn it into a real Playwright `Locator`. |
 | `initPage(Class, page)` | `src/initPage.ts` | Build a page object and fill its decorated fields. |
 | `TodoMvcPage`, `TodoMvcConstructorPage`, `TodoMvcMixedPage` | `examples/` | The same page object written with decorators, with a plain constructor, and with both. |
-| Playwright specs | `test/playwright/` | The same TodoMVC scenario in every style, plus the laziness checks. |
+| Playwright specs | `test/playwright/` | The same TodoMVC scenario in every style, every decorator against tricky inputs (`test/pages/`), and the laziness checks. |
 
 Important: **this library never replaces Playwright.** It only decides *which Playwright call to
 make for each field*. Every value a user ends up with is a genuine Playwright `Locator`.

@@ -80,10 +80,14 @@ Read [`constructor-vs-decorators.md`](constructor-vs-decorators.md) and
 Read `test/playwright/lazy.spec.ts`. Creating a page object never touches the browser; elements
 are looked up on each action, exactly like hand-written locators.
 
-## Step 12 — The mechanics in depth
+## Step 12 — Every decorator, tested
+Skim `test/pages/all-decorators-page.ts` (one field per decorator and option) and
+`test/playwright/decorators.spec.ts`. It's also the quickest reference for "how do I write X".
+
+## Step 13 — The mechanics in depth
 Read [`how-the-factory-works.md`](how-the-factory-works.md).
 
-## Step 13 — Why it's designed this way
+## Step 14 — Why it's designed this way
 Read [`design.md`](design.md): decorator generations, and the comparisons with the Java sibling
 and NestJS.
 

@@ -36,8 +36,9 @@ Step by step:
 3. TypeScript calls that decorator with `(target, propertyKey)`. For a property, `target` is the
    class's prototype and `propertyKey` is `'activeFilter'`.
 4. The decorator reads the current list from `target.constructor` (the class) with
-   `Reflect.getMetadata(FIND_BY_METADATA, ...)`, adds `{ propertyKey, locatorSpec }`, and writes it
-   back with `Reflect.defineMetadata`.
+   `Reflect.getMetadata(FIND_BY_METADATA, ...)`. If this class already decorated the same field, it
+   throws. Otherwise it adds `{ propertyKey, locatorSpec, declaredOn }` and writes the list back
+   with `Reflect.defineMetadata`.
 
 After all fields are decorated, the class carries a list like:
 
@@ -69,8 +70,9 @@ return instance;
    [`constructor-vs-decorators.md`](constructor-vs-decorators.md)). If not, `page` is ignored.
 2. **Read the notes.** `getFindByEntries` returns the recorded list. Because
    `Reflect.getMetadata` walks the prototype chain, a subclass also sees its parent's entries.
-   If a field is redeclared, the list is de-duplicated by field name and the **last** entry wins,
-   so a subclass can override a parent's locator.
+   If a subclass redeclares a field, the list is de-duplicated by field name and the subclass's
+   entry wins, so it overrides the parent's locator. (Two decorators on one field in the *same*
+   class are rejected at step 4 of phase 1.)
 3. **Resolve and assign.** `resolveLocator` (`src/locators/By.ts`) looks at which key the spec
    has and calls the matching Playwright method:
 
@@ -80,12 +82,16 @@ return instance;
 | `{ xpath }` | `page.locator('xpath=' + xpath)` |
 | `{ id }` | `page.locator('[id="..."]')` |
 | `{ testId }` | `page.getByTestId(...)` |
-| `{ text, exact? }` | `page.getByText(...)` |
-| `{ label, exact? }` | `page.getByLabel(...)` |
-| `{ placeholder, exact? }` | `page.getByPlaceholder(...)` |
-| `{ altText, exact? }` | `page.getByAltText(...)` |
-| `{ title, exact? }` | `page.getByTitle(...)` |
-| `{ role, name?, exact? }` | `page.getByRole(role, { name, exact })` |
+| `{ text, exact? }` | `page.getByText(text, { exact })` |
+| `{ label, exact? }` | `page.getByLabel(label, { exact })` |
+| `{ placeholder, exact? }` | `page.getByPlaceholder(placeholder, { exact })` |
+| `{ altText, exact? }` | `page.getByAltText(altText, { exact })` |
+| `{ title, exact? }` | `page.getByTitle(title, { exact })` |
+| `{ role, ...options }` | `page.getByRole(role, options)`, passing every option through (`name`, `exact`, `level`, `checked`, ...) |
+
+`testId`, `text`, `label`, `placeholder`, `altText` and `title` accept a string or a `RegExp`, as
+Playwright does. `id` is turned into an attribute selector with quotes and backslashes escaped, so
+ids like `user:name`, `1st` or `a"b\c` work.
 
 The result is stored on the instance. From here on, `todoPage.activeFilter` is an ordinary
 Playwright `Locator`.
@@ -136,7 +142,8 @@ already, so there is nothing to wrap.
 - **Shorthands are a thin factory.** `createFindByDecorator` is the same trick as Nest's
   `createMappingDecorator` (`@Get`/`@Post` over `@RequestMapping`).
 - **No `emitDecoratorMetadata`.** We don't read field types; the spec alone says how to find the element.
-- **Validation at decoration time.** Mistakes surface when the file loads.
+- **Validation at decoration time.** A bad spec, or two decorators on one field, fails when the
+  file loads.
 - **`initPage`, not `new`.** A decorator can't run code on `new`; something has to do phase 2.
   (Java has the same rule: you must call `PageFactory.initElements(page, this)`.)
 

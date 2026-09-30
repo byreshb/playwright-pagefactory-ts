@@ -87,11 +87,11 @@ constructor-only and the mixed classes against the real demo site.
 | Need to keep `page` for `goto`, waits, keyboard | Constructor: `this.page = page` |
 | Locator depends on runtime data | Method or getter: `row(name) { return this.page.getByRole('row', { name }); }` |
 | Team doesn't want decorators / experimental TS flag | Constructor style, no library needed |
-| Page object extends a base class | Either; decorated fields are inherited (redeclaring a field in a subclass overrides it) |
+| Page object extends a base class | Either; decorated fields are inherited. To override one, redeclare it with `declare`: `@Css('.new') declare submit: Locator;` |
 
 ## Rules to remember
 - **`initPage`, not `new`, for any class with decorators.** `new` alone leaves decorated fields `undefined`.
 - **A class can have no constructor** (decorator-only), **or one taking `(page)`**. `initPage` always passes `page` to it.
-- **If a field is both decorated and assigned in the constructor, the decorator wins**, because it is assigned afterward. Don't do both for the same field.
-- **Class field initializers** (`foo = 1`) also run before `initPage` assigns decorated fields, so decorators win there too.
-- The Java sibling skips `final` fields so constructor-assigned ones aren't overwritten. TypeScript has no equivalent check at runtime, so the rule above is "don't decorate what you assign by hand."
+- **Decorated fields are `undefined` inside the constructor.** `initPage` fills them after the constructor returns. Use them from methods, not from the constructor.
+- **If a field is both decorated and assigned in the constructor (or given an initializer), the decorator wins**, because it is assigned afterward. Don't do both for the same field. The Java sibling enforces this by skipping `final` fields; TypeScript has no runtime equivalent, so it's a rule to follow.
+- **One locator decorator per field.** Two throw when the class loads.

@@ -12,7 +12,7 @@ Versions follow [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`,
 |------|--------------|--------------------------|-------------------------|
 | **MAJOR** (`1.x.x` to `2.0.0`) | A breaking change to the public API | Renaming `initPage`; removing a decorator; changing what `@FindBy` accepts | Yes |
 | **MINOR** (`1.2.x` to `1.3.0`) | A backwards-compatible new feature | Adding a new shorthand such as `@Name`; a new option on an existing decorator | No |
-| **PATCH** (`1.2.3` to `1.2.4`) | A backwards-compatible bug fix | Fixing how a `{ role, name }` locator resolves; docs-only or internal fixes | No |
+| **PATCH** (`1.2.3` to `1.2.4`) | A backwards-compatible bug fix | Fixing how a `@Role` locator resolves; docs-only or internal fixes | No |
 
 Rules of thumb:
 
