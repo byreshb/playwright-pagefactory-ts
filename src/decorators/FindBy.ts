@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import { FIND_BY_METADATA } from '../constants';
-import { LocatorSpec, validateSpec } from '../locators/By';
+import { LocatorSpec, Role as AriaRole, RoleOptions, validateSpec } from '../locators/By';
 
 export interface FindByEntry {
   propertyKey: string | symbol;
@@ -17,12 +17,9 @@ export interface FindByEntry {
 export function FindBy(locatorSpec: LocatorSpec): PropertyDecorator {
   validateSpec(locatorSpec);
   return (target, propertyKey) => {
-    const entries: FindByEntry[] = Reflect.getMetadata(FIND_BY_METADATA, target.constructor) || [];
-    Reflect.defineMetadata(
-      FIND_BY_METADATA,
-      [...entries, { propertyKey, locatorSpec }],
-      target.constructor,
-    );
+    const ctor = target.constructor;
+    const entries: FindByEntry[] = Reflect.getMetadata(FIND_BY_METADATA, ctor) || [];
+    Reflect.defineMetadata(FIND_BY_METADATA, [...entries, { propertyKey, locatorSpec }], ctor);
   };
 }
 
@@ -41,19 +38,21 @@ const createFindByDecorator =
 export const Css = createFindByDecorator((css: string) => ({ css }));
 export const XPath = createFindByDecorator((xpath: string) => ({ xpath }));
 export const Id = createFindByDecorator((id: string) => ({ id }));
-export const TestId = createFindByDecorator((testId: string) => ({ testId }));
-export const Text = createFindByDecorator((text: string, exact?: boolean) => ({ text, exact }));
-export const Label = createFindByDecorator((label: string, exact?: boolean) => ({ label, exact }));
-export const Placeholder = createFindByDecorator((placeholder: string, exact?: boolean) => ({
+type TextMatch = string | RegExp;
+
+export const TestId = createFindByDecorator((testId: TextMatch) => ({ testId }));
+export const Text = createFindByDecorator((text: TextMatch, exact?: boolean) => ({ text, exact }));
+export const Label = createFindByDecorator((label: TextMatch, exact?: boolean) => ({ label, exact }));
+export const Placeholder = createFindByDecorator((placeholder: TextMatch, exact?: boolean) => ({
   placeholder,
   exact,
 }));
-export const AltText = createFindByDecorator((altText: string, exact?: boolean) => ({
+export const AltText = createFindByDecorator((altText: TextMatch, exact?: boolean) => ({
   altText,
   exact,
 }));
-export const Title = createFindByDecorator((title: string, exact?: boolean) => ({ title, exact }));
-type Role = Extract<LocatorSpec, { role: unknown }>['role'];
-export const Role = createFindByDecorator(
-  (role: Role, options: { name?: string | RegExp; exact?: boolean } = {}) => ({ role, ...options }),
-);
+export const Title = createFindByDecorator((title: TextMatch, exact?: boolean) => ({ title, exact }));
+export const Role = createFindByDecorator((role: AriaRole, options: RoleOptions = {}) => ({
+  role,
+  ...options,
+}));
